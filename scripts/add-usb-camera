@@ -10,7 +10,7 @@ PORT=$2
 DEVICE=$3
 
 CONFIG_DIR=/etc/camera-streamer.conf.d
-CONTROL=/usr/local/bin/camera-streamer-control
+CONTROL=/usr/bin/camera-streamer-control
 
 ## Name
 

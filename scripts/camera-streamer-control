@@ -8,6 +8,8 @@ fi
 action=$1
 single=$2
 
+CONFIG_DIR=/etc/camera-streamer.conf.d
+
 run-action() {
   unit=$1
   echo "Running $action for $unit..."
@@ -41,7 +43,7 @@ if [ -z "$single" ] || [[ "$single" == "libcamera" ]]; then
 fi
 
 # iterate over all the camera confs in /boot/camera-streamer
-for conf in /etc/camera-streamer.conf.d/usb-*.conf; do
+for conf in $CONFIG_DIR/usb-*.conf; do
   # get the name of the camera
   name=$(basename "$conf" .conf)
   name=${name#usb-}

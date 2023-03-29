@@ -8,7 +8,7 @@ fi
 NAME=$1
 
 CONFIG_DIR=/etc/camera-streamer.conf.d
-CONTROL=/usr/local/bin/camera-streamer-control
+CONTROL=/usr/bin/camera-streamer-control
 
 if [ -z "$NAME" ]; then
   echo "Usage: $0 <name>"

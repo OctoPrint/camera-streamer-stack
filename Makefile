@@ -1,6 +1,6 @@
 .PHONY: all systemd scripts configs
 
-PREFIX := /usr/local
+PREFIX := /usr
 
 SCRIPTS_DIR := $(PREFIX)/bin
 SYSTEMD_DIR := /etc/systemd/system

@@ -4,9 +4,9 @@ After=network.target
 
 [Service]
 Type=oneshot
-ExecStart=/usr/local/bin/camera-streamer-control start
-ExecStop=/usr/local/bin/camera-streamer-control stop
-ExecReload=/usr/local/bin/camera-streamer-control restart
+ExecStart=/usr/bin/camera-streamer-control start
+ExecStop=/usr/bin/camera-streamer-control stop
+ExecReload=/usr/bin/camera-streamer-control restart
 RemainAfterExit=yes
 KillMode=mixed
 TimeoutStopSec=10
