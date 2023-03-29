@@ -1,0 +1,133 @@
+name: "Build binary & package"
+
+on:
+  workflow_dispatch:
+    inputs:
+      debian_revision:
+        description: "Debian revision to use"
+        required: false
+        default: '1'
+
+jobs:
+  package:
+    name: "Package"
+    needs: build
+    runs-on: ubuntu-latest
+
+    outputs:
+      package-version: ${{ steps.manifest.outputs.package-version }}
+      build-date: ${{ steps.manifest.outputs.build-date }}
+
+    steps:
+    - name: "⬇ Checkout"
+      uses: actions/checkout@v3
+
+    - name: 🏗 Set up Python 3.10
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.10"
+
+    - name: Install termux-create-package
+      run: |
+        export install_path="/usr/local/bin"
+        sudo mkdir -p "$install_path"
+        sudo curl -L 'https://github.com/termux/termux-create-package/releases/latest/download/termux-create-package' -o "$install_path/termux-create-package"
+        sudo chmod 755 "$install_path/termux-create-package"
+
+        pip install ruamel.yaml
+
+    - name: Prepare version
+      id: version
+      run: |
+        today=$(date +"%Y%m%d")
+        echo "build-date=$today" >> $GITHUB_OUTPUT
+
+        revision="${{ github.event.inputs.debian_revision }}"
+
+        hash=$(git rev-parse --short HEAD)
+        echo "git-hash=$hash" >> $GITHUB_OUTPUT
+
+        version="0~git$today+$hash-$revision"
+        echo "package-version=$version" >> $GITHUB_OUTPUT
+
+    - name: Build package
+      run: |
+        termux-create-package --pkg-version=${{ steps.version.outputs.package-version }} manifest.yml
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: camera-streamer-stack.deb
+        path: camera-streamer-stack_*.deb
+
+  release:
+    name: "Release"
+    runs-on: ubuntu-latest
+
+    needs: 
+    - build
+    - package
+
+    outputs:
+      release-assets: ${{ steps.create_release.outputs.assets }}
+
+    steps:
+    - name: Download deb artifact
+      uses: actions/download-artifact@v3
+      with:
+        name: camera-streamer-stack.deb
+
+    - name: "📝 Prepare release"
+      run: |
+        package_version="${{ needs.package.outputs.package-version }}"
+        revision="${{ github.event.inputs.debian_revision }}"
+        build_date="${{ needs.package.outputs.build-date }}"
+        hash="${{ needs.build.outputs.git-hash }}"
+
+        RELEASE_NAME="camera-streamer-stack $package_version"
+        echo "RELEASE_NAME=$RELEASE_NAME" >> $GITHUB_ENV
+
+        RELEASE_TAG="$build_date-$revision"
+        echo "RELEASE_TAG=$RELEASE_TAG" >> $GITHUB_ENV
+
+        cat > release.md << EOF
+        Built from commit $hash.
+        EOF
+
+    - name: "🔖 Create release & attach export"
+      uses: softprops/action-gh-release@v1
+      id: create_release
+      with:
+        name: "${{ env.RELEASE_NAME }}"
+        tag_name: "${{ env.RELEASE_TAG }}"
+        body_path: "release.md"
+        fail_on_unmatched_files: true
+        files: |
+          camera-streamer-stack*.deb
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  notify:
+    name: "Notify"
+    runs-on: ubuntu-latest
+
+    needs: release
+
+    steps:
+    - name: "♻ Prepare data"
+      run: |
+        cat > assets.json <<EOF
+        ${{ needs.release.outputs.release-assets }}
+        EOF
+
+        URL=$(jq -r '.[0].browser_download_url' assets.json)
+
+        echo "DEB_URL=$URL" >> $GITHUB_ENV
+
+    - name: "📨 Notify apt repo"
+      uses: peter-evans/repository-dispatch@v2
+      with:
+        token: ${{ secrets.REPO_DISPATCH_ACCESS }}
+        repository: OctoPrint/apt.octoprint.org
+        event-type: add-package
+        client-payload: '{"url": "${{ env.DEB_URL }}", "dist": "bullseye", "component": "rpi"}'
