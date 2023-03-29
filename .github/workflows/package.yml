@@ -14,8 +14,9 @@ jobs:
     runs-on: ubuntu-latest
 
     outputs:
-      package-version: ${{ steps.manifest.outputs.package-version }}
-      build-date: ${{ steps.manifest.outputs.build-date }}
+      package-version: ${{ steps.version.outputs.package-version }}
+      build-date: ${{ steps.version.outputs.build-date }}
+      git-hash: ${{ steps.version.outputs.git-hash }}
 
     steps:
     - name: "⬇ Checkout"
@@ -76,10 +77,10 @@ jobs:
 
     - name: "📝 Prepare release"
       run: |
-        package_version="${{ needs.package.outputs.package-version }}"
         revision="${{ github.event.inputs.debian_revision }}"
+        package_version="${{ needs.package.outputs.package-version }}"
         build_date="${{ needs.package.outputs.build-date }}"
-        hash="${{ needs.build.outputs.git-hash }}"
+        hash="${{ needs.package.outputs.git-hash }}"
 
         RELEASE_NAME="camera-streamer-stack $package_version"
         echo "RELEASE_NAME=$RELEASE_NAME" >> $GITHUB_ENV
