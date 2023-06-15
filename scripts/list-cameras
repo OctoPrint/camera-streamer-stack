@@ -10,10 +10,14 @@ for path in /dev/v4l/by-id/usb-*-video-index0; do
         echo
         v4l2-ctl --device "$path" --all --list-formats --list-formats-ext
     else
-        echo "  $path"
+        echo "  None available"
     fi
 done
 
 echo
 echo "Available libcamera devices:"
-/usr/bin/libcamera-hello --list-cameras
+if [ -e /usr/bin/libcamera-hello ]; then
+    /usr/bin/libcamera-hello --list-cameras
+else
+    echo "  None available"
+fi
