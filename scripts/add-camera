@@ -94,6 +94,11 @@ else
   fi
 fi
 
+if grep -qs "DEVICE=$DEVICE" $CONFIG_DIR/*.conf; then
+  echo "Device $DEVICE is already configured"
+  exit 1
+fi
+
 make_usb_conf() {
   cat > $CONFIG_DIR/usb-$NAME.conf <<EOF
 ### Options for USB based cameras
