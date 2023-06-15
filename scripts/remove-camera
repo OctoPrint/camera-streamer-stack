@@ -1,0 +1,35 @@
+#!/bin/bash
+
+if [ "$EUID" -ne 0 ]
+  then echo "Please run as root/with sudo"
+  exit 1
+fi
+
+if [[ "$1" != "libcamera" ]] && [[ "$1" != "usb" ]]
+  then echo "type must be libcamera or usb"
+  exit 1
+fi
+
+TYPE=$1
+NAME=$2
+
+CONFIG_DIR=/etc/camera-streamer.conf.d
+CONTROL=/usr/bin/camera-streamer-control
+
+if [ -z "$NAME" ]; then
+  echo "Usage: $0 <name>"
+  exit 1
+fi
+
+if [ ! -e "$CONFIG_DIR/$TYPE-$NAME.conf" ]; then
+  echo "Camera $TYPE-$NAME does not exist"
+  exit 1
+fi
+
+$CONTROL stop $NAME
+
+rm $CONFIG_DIR/$TYPE-$NAME.conf
+if [[ "$TYPE" == "usb" ]]; then
+  rm /run/systemd/system/camera-streamer-usb-$NAME.path || true
+fi
+systemctl daemon-reload
