@@ -1,0 +1,158 @@
+#!/bin/bash
+
+if [ "$EUID" -ne 0 ]
+  then echo "Please run as root/with sudo"
+  exit 1
+fi
+
+if [[ "$1" != "libcamera" ]] && [[ "$1" != "usb" ]]
+  then echo "type must be libcamera or usb"
+  exit 1
+fi
+
+TYPE=$1
+NAME=$2
+PORT=$3
+DEVICE=$4
+
+CONFIG_DIR=/etc/camera-streamer.conf.d
+CONTROL=/usr/bin/camera-streamer-control
+
+## Name
+
+if [ -z "$NAME" ]; then
+  echo "Usage: $0 <type> <name> [port] [device]"
+  exit 1
+fi
+
+# make sure the name is unique
+if [ -e "$CONFIG_DIR/$TYPE-$NAME.conf" ]; then
+  echo "Camera $TYPE-$NAME already exists"
+  exit 1
+fi
+
+## Port
+
+if [ -z "$PORT" ]; then
+  port=8080
+  while grep -qs "PORT=$port" $CONFIG_DIR/*.conf; do
+    port=$((port+1))
+  done
+  PORT=$port
+  echo "No port provided, automatically selected port $PORT"
+  echo
+fi
+
+# make sure the port is available
+if grep -qs "PORT=$PORT" $CONFIG_DIR/*.conf; then
+  echo "Port $PORT is already used by another camera"
+  exit 1
+fi
+
+# Get a list all camera for a type
+if [[ "$TYPE" == "usb" ]]
+then
+  LIST=$(echo /dev/v4l/by-id/usb-*-video-index0)
+else
+  LIST=$(/usr/bin/libcamera-hello --list-cameras | grep -o '/base/soc/[^)]*')
+fi
+
+## Device
+
+if [ -z "$DEVICE" ]; then
+  echo "Please make sure your $TYPE camera is plugged in and select it below:"
+  echo
+  PS3="? "
+  options=($LIST)
+  select opt in "${options[@]}"; do
+    if [ -n "$opt" ]; then
+      DEVICE=$opt
+      break
+    fi
+    echo
+  done
+  echo
+fi
+
+# make sure the device exists
+if [[ $TYPE == "usb" ]]; then
+  if [ ! -e "$DEVICE" ]; then
+    echo "Device $DEVICE does not exist"
+    exit 1
+  fi
+else
+  found=0
+  for opt in $LIST; do
+    if [[ "$opt" == "$DEVICE" ]]; then
+      found=1
+      break
+    fi
+  done
+  if [ $found -eq 0 ]; then
+    echo "Device $DEVICE does not exist"
+    exit 1
+  fi
+fi
+
+make_usb_conf() {
+  cat > $CONFIG_DIR/usb-$NAME.conf <<EOF
+### Options for USB based cameras
+
+# The port on which the webcam server for the camera should listen on.
+PORT=$PORT
+
+# The path to the camera device.
+DEVICE=$DEVICE
+
+# The image format of the camera.
+FORMAT=YUYV
+
+# The resolution to set on the camera. Defaults to 1280x720.
+WIDTH=1280
+HEIGHT=720
+
+# The framerate to set on the camera. Defaults to 15fps.
+FRAMERATE=15
+
+# Additional options.
+OPTIONS=
+EOF
+}
+
+make_libcamera_conf() {
+  cat > $CONFIG_DIR/libcamera-$NAME.conf <<EOF
+### Options for libcamera based cameras (PiCam, Arducam, ...)
+
+# The port on which the webcam server for the camera should listen on.
+PORT=$PORT
+
+# The path to the camera device.
+DEVICE=$DEVICE
+
+# The resolution to request on the camera sensor. Defaults to 1280x720.
+WIDTH=1920
+HEIGHT=1080
+
+# The height to use for the video stream. Defaults to 720.
+VIDEO_HEIGHT=720
+
+# The height to use for the snapshots. Defaults to 1080.
+SNAPSHOT_HEIGHT=1080
+
+# The framerate to set on the camera. Defaults to 15fps.
+FRAMERATE=15
+
+# Additional options. By default enables continuous auto focus (if possible).
+OPTIONS='--camera-options="AfMode=2" --camera-options="AfRange=2"'
+EOF
+}
+
+make_${TYPE}_conf
+
+$CONTROL restart $NAME
+
+echo "Camera $TYPE-$NAME added"
+echo
+echo "Port:               $PORT"
+echo "Device:             $DEVICE"
+echo "Configuration file: $CONFIG_DIR/$TYPE-$NAME.conf"

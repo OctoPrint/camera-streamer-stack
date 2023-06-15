@@ -13,3 +13,7 @@ for path in /dev/v4l/by-id/usb-*-video-index0; do
         echo "  $path"
     fi
 done
+
+echo
+echo "Available libcamera devices:"
+/usr/bin/libcamera-hello --list-cameras
