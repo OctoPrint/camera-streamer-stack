@@ -2,6 +2,8 @@
 
 ALL=$1
 
+CONFIG_DIR=/etc/camera-streamer.conf.d
+
 echo "Available USB camera devices:"
 for path in /dev/v4l/by-id/usb-*-video-index0; do
     if [[ "$ALL" == "--all" ]]; then
@@ -14,10 +16,21 @@ for path in /dev/v4l/by-id/usb-*-video-index0; do
     fi
 done
 
+
 echo
-echo "Available libcamera devices:"
+echo "Available libcamera devices (* = in a config):"
 if [ -e /usr/bin/libcamera-hello ]; then
-    /usr/bin/libcamera-hello --list-cameras
+    IFS=$'\n'
+    LIST=$(/usr/bin/libcamera-hello --list-cameras | grep -v '^ ' | sed -e '1,2d')
+    for d in $LIST; do
+        inuse=' '
+        device=$(echo $d | grep -o '/base/soc/[^)]*')
+        if grep -qs "DEVICE=$device" $CONFIG_DIR/*.conf; then
+            inuse='*'
+        fi
+        echo "  [$inuse] $d"
+    done
+    unset IFS
 else
     echo "  None available"
 fi
