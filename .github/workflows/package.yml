@@ -55,7 +55,7 @@ jobs:
         termux-create-package --pkg-version=${{ steps.version.outputs.package-version }} manifest.yml
 
     - name: Upload artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: camera-streamer-stack.deb
         path: camera-streamer-stack_*.deb
@@ -71,7 +71,7 @@ jobs:
 
     steps:
     - name: Download deb artifact
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: camera-streamer-stack.deb
 
