@@ -40,3 +40,6 @@ data_files:
   bin/list-usb-cameras:
     source: scripts/list-usb-cameras
     perm: 0755
+  bin/list-libcamera-devices:
+    source: scripts/list-libcamera-devices
+    perm: 0755
