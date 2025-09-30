@@ -34,8 +34,6 @@ jobs:
           sudo curl -L 'https://github.com/termux/termux-create-package/releases/latest/download/termux-create-package' -o "$install_path/termux-create-package"
           sudo chmod 755 "$install_path/termux-create-package"
 
-          pip install ruamel.yaml
-
       - name: Prepare version
         id: version
         run: |
@@ -55,8 +53,8 @@ jobs:
 
       - name: Build packages
         run: |
-          termux-create-package --pkg-version=${{ steps.version.outputs.package-version-bullseye }} manifest-bullseye.yml
-          termux-create-package --pkg-version=${{ steps.version.outputs.package-version-bookworm }} manifest-bookworm.yml
+          termux-create-package --pkg-version=${{ steps.version.outputs.package-version-bullseye }} manifest-bullseye.json
+          termux-create-package --pkg-version=${{ steps.version.outputs.package-version-bookworm }} manifest-bookworm.json
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
