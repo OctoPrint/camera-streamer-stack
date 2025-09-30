@@ -6,12 +6,12 @@ StartLimitBurst=10
 
 [Service]
 EnvironmentFile=/etc/camera-streamer.conf.d/libcamera.conf
-ExecCondition=/bin/sh -c "/usr/bin/libcamera-hello --list-cameras | grep -o '/base/soc/[^)]*'"
+ExecCondition=/usr/bin/list-libcamera-devices
 ExecCondition=/bin/sh -c "! ss -ltn src :$PORT | grep -q LISTEN"
 ExecStart=/bin/sh -c "exec /usr/bin/camera-streamer \
   --http-port=${PORT} \
   --camera-type=libcamera \
-  --camera-path=$(/usr/bin/libcamera-hello --list-cameras | grep -o '/base/soc/[^)]*' | head -n1) \
+  --camera-path=$(/usr/bin/list-libcamera-devices | head -n1) \
   --camera-format=YUYV \
   --camera-width=${WIDTH} --camera-height=${HEIGHT} \
   --camera-video.height=${VIDEO_HEIGHT} \

@@ -1,0 +1,6 @@
+#!/bin/sh
+
+tool=/usr/bin/rpicam-hello  # bookworm
+[ -e "$tool" ] || tool=/usr/bin/libcamera-hello  # bullseye
+
+$tool --list-cameras | grep -o '/base/soc/[^)]*' || exit -1
