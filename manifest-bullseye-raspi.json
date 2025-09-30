@@ -1,9 +1,9 @@
 {
   "control": {
-    "Package": "camera-streamer-stack",
+    "Package": "camera-streamer-stack-raspi",
     "Architecture": "all",
     "Maintainer": "Gina Häußge <gina@octoprint.org>",
-    "Depends": "camera-streamer, rpicam-apps-lite, v4l-utils",
+    "Depends": "camera-streamer-raspi, libcamera-apps-lite, v4l-utils",
     "Homepage": "https://github.com/OctoPrint/camera-streamer-stack",
     "Description": "camera-streamer based webcam stack for OctoPi-UpToDate"
   },

@@ -53,14 +53,14 @@ jobs:
 
       - name: Build packages
         run: |
-          termux-create-package --pkg-version=${{ steps.version.outputs.package-version-bullseye }} manifest-bullseye.json
-          termux-create-package --pkg-version=${{ steps.version.outputs.package-version-bookworm }} manifest-bookworm.json
+          termux-create-package --pkg-version=${{ steps.version.outputs.package-version-bullseye }} manifest-bullseye-raspi.json
+          termux-create-package --pkg-version=${{ steps.version.outputs.package-version-bookworm }} manifest-bookworm-raspi.json
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: camera-streamer-stack.deb
-          path: camera-streamer-stack_*.deb
+          path: camera-streamer-stack*.deb
 
   release:
     name: "Release"
