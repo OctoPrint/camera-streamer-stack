@@ -24,12 +24,12 @@
       "perm": 644
     },
 
-    "/boot/firmware/camera-streamer/libcamera.conf": {
+    "/etc/camera-streamer.conf.d/libcamera.conf": {
       "source": "configs/libcamera.conf",
       "perm": 644,
       "is_conffile": true
     },
-    "/boot/firmware/camera-streamer/usb-default.conf": {
+    "/etc/camera-streamer.conf.d/usb-default.conf": {
       "source": "configs/usb-default.conf",
       "perm": 644,
       "is_conffile": true
