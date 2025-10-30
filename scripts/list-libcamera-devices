@@ -3,4 +3,4 @@
 tool=/usr/bin/rpicam-hello  # bookworm
 [ -e "$tool" ] || tool=/usr/bin/libcamera-hello  # bullseye
 
-$tool --list-cameras | grep -o '/base/soc/[^)]*' || exit -1
+$tool --list-cameras | grep -oE '/base/(soc|axi)/[^)]*' || exit -1
